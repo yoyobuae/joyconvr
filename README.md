@@ -19,11 +19,9 @@ No external build dependencies. From root of repo:
 
 # Instalation
 
-Either:
-* Copy `build/joyconvr` folder (the entire folder) to `~/.steam/steam/steamapps/common/SteamVR/drivers/`
-Or:
-* Run `~/.steam/steam/steamapps/common/SteamVR/bin/vrpathreg.sh adddriver <path_to_folder_containing_joyconvr>`
-
+* Do one of these:
+  * Copy `build/joyconvr` folder (the entire folder) to `~/.steam/steam/steamapps/common/SteamVR/drivers/`
+  * Run `~/.steam/steam/steamapps/common/SteamVR/bin/vrpathreg.sh adddriver <path_to_folder_containing_joyconvr>`
 * Double check that `joyconvr` driver shows up and is enabled in `Steam VR settings > Startup/shutdown > Manage Add-ons`
 * Install https://github.com/nicman23/dkms-hid-nintendo
 * Install https://github.com/DanielOgorchock/joycond
@@ -35,7 +33,7 @@ Or:
 
 # Caveats
 
-Nintendo Joycon SYNC/SR/SL buttons are on a cable that's extremely fragile. Even being super careful, continuous use of the SYNC button will eventually cause the cable to break. So be ready to acquire a replacement cables and the tools to open the Joycons.
+Nintendo Joycon SYNC/SR/SL buttons are on a cable that's extremely fragile. Even being super careful, occasional use of the SYNC button will eventually cause the cable to break. So be ready to acquire a replacement cables and the tools to open the Joycons, since without SYNC button it will no longer be possible to connect Joycons back to PC after they are paired with the Switch.
 
 `joyconvr` SteamVR driver will need to be disabled when not in use, because it generates errors on SteamVR when Joycons are not connected.
 
