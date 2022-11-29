@@ -23,6 +23,9 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 find_library(OPENVR_LIB openvr_api HINTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/openvr/lib/" NO_DEFAULT_PATH )
 
+include (FindPkgConfig)
+pkg_check_modules(EIGEN3 REQUIRED IMPORTED_TARGET eigen3)
+
 # Example Driver
 set(DRIVER_NAME "joyconvr")
 set(EXAMPLE_PROJECT "driver_${DRIVER_NAME}")
@@ -30,6 +33,7 @@ file(GLOB_RECURSE HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src/*.hpp")
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src/*.cpp")
 add_library("${EXAMPLE_PROJECT}" SHARED "${HEADERS}" "${SOURCES}")
 
+target_include_directories("${EXAMPLE_PROJECT}" PRIVATE "${EIGEN3_INCLUDE_DIRS}")
 target_include_directories("${EXAMPLE_PROJECT}" PUBLIC "${OPENVR_INCLUDE_DIR}")
 target_include_directories("${EXAMPLE_PROJECT}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src/")
 target_link_libraries("${EXAMPLE_PROJECT}" PUBLIC "${OPENVR_LIB}")

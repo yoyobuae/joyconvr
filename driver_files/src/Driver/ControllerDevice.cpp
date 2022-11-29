@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include <algorithm>
 
 #include "ControllerDevice.hpp"
@@ -76,10 +78,19 @@ void JoyconVrDriver::ControllerDevice::Update()
         }
     }
 
-    // Post pose
-    GetDriver()->GetDriverHost()->TrackedDevicePoseUpdated(this->device_index_, this->last_pose_, sizeof(vr::DriverPose_t));
+    // Setup pose for this frame
+    auto pose = this->last_pose_;
+
+    double q[4];
+    bool q_valid = false;
 
     if (this->handedness_ == Handedness::LEFT) {
+        pose.vecPosition[0] = -0.2;
+        pose.vecPosition[1] = 1.3;
+        pose.vecPosition[2] = -0.2;
+
+        q_valid = getLeftIMU(q);
+
         GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_Z), 0); //Application Menu
         GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TL2), 0); //Grip
         GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_SELECT), 0); //System
@@ -106,8 +117,18 @@ void JoyconVrDriver::ControllerDevice::Update()
         } else {
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 0.0, 0);
         }
+
+        if (getJoyButton(BTN_DPAD_RIGHT)) { // IMU reset
+            resetLeftIMU();
+        }
     }
     else if (this->handedness_ == Handedness::RIGHT) {
+        pose.vecPosition[0] = 0.2;
+        pose.vecPosition[1] = 1.3;
+        pose.vecPosition[2] = -0.2;
+
+        q_valid = getRightIMU(q);
+
         GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_MODE), 0); //Application Menu
         GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TR2), 0); //Grip
         GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_START), 0); //System
@@ -135,6 +156,32 @@ void JoyconVrDriver::ControllerDevice::Update()
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 0.0, 0);
         }
 
+        if (getJoyButton(BTN_WEST)) { // IMU reset
+            resetRightIMU();
+        }
+    }
+
+    if (q_valid) {
+        pose.qRotation.w = q[0];
+        pose.qRotation.x = -q[2];
+        pose.qRotation.y = q[3];
+        pose.qRotation.z = -q[1];
+
+        pose.poseTimeOffset = 0;
+
+        pose.poseIsValid = true;
+
+        pose.result = vr::TrackingResult_Running_OK;
+
+        pose.deviceIsConnected = true;
+
+        pose.qWorldFromDriverRotation = HmdQuaternion_Init(1, 0, 0, 0);
+        pose.qDriverFromHeadRotation = HmdQuaternion_Init(1, 0, 0, 0);
+
+        // Post pose
+        GetDriver()->GetDriverHost()->TrackedDevicePoseUpdated(this->device_index_, pose, sizeof(vr::DriverPose_t));
+
+        this->last_pose_ = pose;
     }
 }
 
@@ -157,7 +204,9 @@ vr::EVRInitError JoyconVrDriver::ControllerDevice::Activate(uint32_t unObjectId)
 {
     this->device_index_ = unObjectId;
 
-    GetDriver()->Log("Activating controller " + this->serial_);
+    std::stringstream ss;
+    ss << this->device_index_;
+    GetDriver()->Log("Activating controller serial " + this->serial_ + " with index " + ss.str());
 
     // Get the properties handle
     auto props = GetDriver()->GetProperties()->TrackedDeviceToPropertyContainer(this->device_index_);
