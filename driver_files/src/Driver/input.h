@@ -49,5 +49,9 @@ extern "C" void readJoyButton();
 extern "C" bool getJoyButton(int button);
 extern "C" void readJoyAxis();
 extern "C" int getJoyAxis(int axis);
+extern "C" bool getLeftIMU(double q[4]);
+extern "C" void resetLeftIMU();
+extern "C" bool getRightIMU(double q[4]);
+extern "C" void resetRightIMU();
 
 #endif // INPUT_H
