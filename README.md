@@ -2,7 +2,7 @@
 
 Extremely barebones Joycon SteamVR driver.
 
-* No tracking at all from the Joycons themselves
+* Basic 3DoF only tracking using Joycon IMU sensor. Joycon position is fixed 1.3 meters above ground and +/- 20cm to the left/right.
 * Tries to emulate Vive wand controllers
 * Hardcoded button mappings:
   * L/R buttons -> left/right trigger buttons
