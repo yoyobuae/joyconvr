@@ -394,7 +394,7 @@ bool Joystick::read()
 
 // System constants
 // #define deltat 0.001f // sampling period in seconds (shown as 1 ms)
-#define gyroMeasError 3.14159265358979f * (5.0f / 180.0f) // gyroscope measurement error in rad/s (shown as 5 deg/s)
+#define gyroMeasError 3.14159265358979f * (20.0f / 180.0f) // gyroscope measurement error in rad/s (shown as 5 deg/s)
 #define beta sqrt(3.0f / 4.0f) * gyroMeasError // compute beta
 
 // Params
@@ -709,8 +709,8 @@ void IMU::drift_compensation(double &w_x, double &w_y, double &w_z)
      * If the controller is held still then gyro bias is estimated by
      * calculating a rolling average for each of the gyro axes.
      */
-    if (gyro_activity_level < 5.0) {
-        double rate = 0.004;
+    if (gyro_activity_level < 2.0) {
+        double rate = 0.001;
         int gyro_history_midpoint = (gyro_history_head + gyro_history_size/2) % gyro_history_size;
         g_bias_x = (1 - rate)*g_bias_x + rate*gyro_history[gyro_history_midpoint].x;
         g_bias_y = (1 - rate)*g_bias_y + rate*gyro_history[gyro_history_midpoint].y;
