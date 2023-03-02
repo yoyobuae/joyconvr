@@ -42,6 +42,7 @@ namespace JoyconVrDriver {
 
         bool did_vibrate_ = false;
         float vibrate_anim_state_ = 0.f;
+        int c = 0;
 
         vr::VRInputComponentHandle_t application_button_click_component_ = 0;
         vr::VRInputComponentHandle_t grip_button_click_component_ = 0;

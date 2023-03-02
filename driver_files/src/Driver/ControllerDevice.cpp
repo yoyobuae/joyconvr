@@ -312,6 +312,8 @@ void JoyconVrDriver::ControllerDevice::Update()
         pose.vecPosition[1] = 1.3;
         pose.vecPosition[2] = -0.2;
 
+        if (c > 60)
+            Log("Reading from left IMU");
         q_valid = getLeftIMU(q);
 
         GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_Z), 0); //Application Menu
@@ -382,6 +384,8 @@ void JoyconVrDriver::ControllerDevice::Update()
         pose.vecPosition[1] = 1.3;
         pose.vecPosition[2] = -0.2;
 
+        if (c > 60)
+            Log("Reading from right IMU");
         q_valid = getRightIMU(q);
 
         GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_MODE), 0); //Application Menu
@@ -445,6 +449,19 @@ void JoyconVrDriver::ControllerDevice::Update()
         GetDriver()->GetInput()->UpdateSkeletonComponent(skeleton_component_, vr::VRSkeletalMotionRange_WithController, hand_pose, NUM_BONES);
         GetDriver()->GetInput()->UpdateSkeletonComponent(skeleton_component_, vr::VRSkeletalMotionRange_WithoutController, hand_pose, NUM_BONES);
 #endif
+    }
+
+    if (c++ > 60) {
+        std::stringstream ss;
+        ss << "serial: " << this->serial_;
+        ss <<" index: " << this->device_index_;
+        ss <<" q_valid: " << q_valid;
+        ss <<" q[0]: " << q[0];
+        ss <<" q[1]: " << q[1];
+        ss <<" q[2]: " << q[2];
+        ss <<" q[3]: " << q[3];
+        Log(ss.str());
+        c = 0;
     }
 
     if (q_valid) {
