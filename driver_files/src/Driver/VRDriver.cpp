@@ -1,6 +1,8 @@
 #include "VRDriver.hpp"
 #include <Driver/ControllerDevice.hpp>
 
+#define ENABLE_HMD
+
 vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverContext)
 {
     // Perform driver context initialisation
@@ -9,6 +11,15 @@ vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverCon
     }
 
     Log("Activating JoyconVR Driver...");
+
+
+#ifdef ENABLE_HMD
+    {
+        Log("joyconvr: Activating HMD");
+        m_pNullHmdLatest = new HMDDevice();
+        vr::VRServerDriverHost()->TrackedDeviceAdded(m_pNullHmdLatest->GetSerialNumber().c_str(), vr::TrackedDeviceClass_HMD, m_pNullHmdLatest);
+    }
+#endif
 
     {
         std::shared_ptr<IVRDevice> addtracker;
@@ -29,11 +40,21 @@ vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverCon
 
 void JoyconVrDriver::VRDriver::Cleanup()
 {
+#ifdef ENABLE_HMD
+    delete m_pNullHmdLatest;
+    m_pNullHmdLatest = NULL;
+#endif
 }
 
 
 void JoyconVrDriver::VRDriver::RunFrame()
 {
+#ifdef ENABLE_HMD
+    if (m_pNullHmdLatest) {
+        m_pNullHmdLatest->RunFrame();
+    }
+#endif
+
     // Collect events
     vr::VREvent_t event;
     std::vector<vr::VREvent_t> events;

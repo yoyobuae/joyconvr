@@ -9,6 +9,8 @@
 #include <Driver/IVRDriver.hpp>
 #include <Driver/IVRDevice.hpp>
 
+#include "HMDDevice.h"
+
 namespace JoyconVrDriver {
     class VRDriver : public IVRDriver {
     public:
@@ -35,6 +37,7 @@ namespace JoyconVrDriver {
         virtual ~VRDriver() = default;
 
     private:
+        HMDDevice *m_pNullHmdLatest = nullptr;
         std::vector<std::shared_ptr<IVRDevice>> devices_;
         std::vector<vr::VREvent_t> openvr_events_;
         std::chrono::milliseconds frame_timing_ = std::chrono::milliseconds(16);
