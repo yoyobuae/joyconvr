@@ -44,13 +44,27 @@ namespace JoyconVrDriver {
         float vibrate_anim_state_ = 0.f;
         int c = 0;
 
+        bool auto_click_left_trackpad = false;
+
         vr::VRInputComponentHandle_t application_button_click_component_ = 0;
         vr::VRInputComponentHandle_t grip_button_click_component_ = 0;
         vr::VRInputComponentHandle_t system_button_click_component_ = 0;
-        vr::VRInputComponentHandle_t trackpad_button_click_component_ = 0;
-        vr::VRInputComponentHandle_t trackpad_touch_component_ = 0;
-        vr::VRInputComponentHandle_t trackpad_x_component_ = 0;
-        vr::VRInputComponentHandle_t trackpad_y_component_ = 0;
+        vr::VRInputComponentHandle_t a_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t b_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t x_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t y_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t left_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t down_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t up_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t right_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t left_trackpad_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t left_trackpad_touch_component_ = 0;
+        vr::VRInputComponentHandle_t left_trackpad_x_component_ = 0;
+        vr::VRInputComponentHandle_t left_trackpad_y_component_ = 0;
+        vr::VRInputComponentHandle_t right_trackpad_button_click_component_ = 0;
+        vr::VRInputComponentHandle_t right_trackpad_touch_component_ = 0;
+        vr::VRInputComponentHandle_t right_trackpad_x_component_ = 0;
+        vr::VRInputComponentHandle_t right_trackpad_y_component_ = 0;
         vr::VRInputComponentHandle_t trigger_value_component_ = 0;
         vr::VRInputComponentHandle_t haptic_component_ = 0;
         vr::VRInputComponentHandle_t skeleton_component_ = 0;

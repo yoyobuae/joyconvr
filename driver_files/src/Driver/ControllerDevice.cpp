@@ -316,11 +316,6 @@ void JoyconVrDriver::ControllerDevice::Update()
             Log("Reading from left IMU");
         q_valid = getLeftIMU(q);
 
-        GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_Z), 0); //Application Menu
-        GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TL2), 0); //Grip
-        GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_SELECT), 0); //System
-        GetDriver()->GetInput()->UpdateBooleanComponent(trackpad_button_click_component_, getJoyButton(BTN_THUMBL), 0); //Trackpad
-
         float x = static_cast<float>(getJoyAxis(ABS_X))/32768.0f;
         float y = static_cast<float>(getJoyAxis(ABS_Y))/-32768.0f;
         float norm = hypot(x, y);
@@ -332,18 +327,54 @@ void JoyconVrDriver::ControllerDevice::Update()
         float trackpad_x = trackpad_norm * cos(arct);
         float trackpad_y = trackpad_norm * sin(arct);
 
-        GetDriver()->GetInput()->UpdateBooleanComponent(trackpad_touch_component_, trackpad_touch, 0); //Trackpad
-        GetDriver()->GetInput()->UpdateScalarComponent(trackpad_x_component_, trackpad_x, 0); //Trackpad x
-        GetDriver()->GetInput()->UpdateScalarComponent(trackpad_y_component_, trackpad_y, 0); //Trackpad y
+        /*
+         * Minus button         /input/application_menu
+         * SR button            /input/grip
+         * Capture button       /input/system
+         * Joystick press       /input/trackpad/click
+         *
+         * Dpad Left            /input/left
+         * Dpad Down            /input/down
+         * Dpad Up              /input/up
+         * Dpad Right           /input/right
+         *
+         * Joystick X axis      /input/trackpad/x
+         * Joystick Y axis      /input/trackpad/y
+         *
+         * ZL button            /input/trigger/value
+         *
+         * SL button            Reset IMU orientation
+         * L button             Special functions
+         */
+        if (getJoyButton(BTN_TL)) {
+            if (getJoyButton(BTN_THUMBL)) {
+                auto_click_left_trackpad = !auto_click_left_trackpad;
+            }
+        } else {
+            GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_SELECT), 0);  // Application Menu
+            GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TRIGGER_HAPPY2), 0); // Grip
+            GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_Z), 0);            // System
+            GetDriver()->GetInput()->UpdateBooleanComponent(left_trackpad_button_click_component_,
+                                                            getJoyButton(BTN_THUMBL) || (trackpad_touch && auto_click_left_trackpad), 0);     // Trackpad
+
+            GetDriver()->GetInput()->UpdateBooleanComponent(left_button_click_component_,  getJoyButton(BTN_DPAD_LEFT), 0);
+            GetDriver()->GetInput()->UpdateBooleanComponent(down_button_click_component_,  getJoyButton(BTN_DPAD_DOWN), 0);
+            GetDriver()->GetInput()->UpdateBooleanComponent(up_button_click_component_,    getJoyButton(BTN_DPAD_UP), 0);
+            GetDriver()->GetInput()->UpdateBooleanComponent(right_button_click_component_, getJoyButton(BTN_DPAD_RIGHT), 0);
+        }
+
+        GetDriver()->GetInput()->UpdateBooleanComponent(left_trackpad_touch_component_, trackpad_touch, 0); // Trackpad touch
+        GetDriver()->GetInput()->UpdateScalarComponent(left_trackpad_x_component_, trackpad_x, 0);          // Trackpad x
+        GetDriver()->GetInput()->UpdateScalarComponent(left_trackpad_y_component_, trackpad_y, 0);          // Trackpad y
 
 
-        if (getJoyButton(BTN_TL)) { //Trigger
+        if (getJoyButton(BTN_TL2)) { // Trigger
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 1.0, 0);
         } else {
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 0.0, 0);
         }
 
-        if (getJoyButton(BTN_DPAD_RIGHT)) { // IMU reset
+        if (getJoyButton(BTN_TRIGGER_HAPPY1)) { // IMU reset
             resetLeftIMU();
         }
 
@@ -388,10 +419,34 @@ void JoyconVrDriver::ControllerDevice::Update()
             Log("Reading from right IMU");
         q_valid = getRightIMU(q);
 
-        GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_MODE), 0); //Application Menu
-        GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TR2), 0); //Grip
-        GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_START), 0); //System
-        GetDriver()->GetInput()->UpdateBooleanComponent(trackpad_button_click_component_, getJoyButton(BTN_THUMBR), 0); //Trackpad
+        /*
+         * Plus button          /input/application_menu
+         * SL button            /input/grip
+         * Home button          /input/system
+         * Joystick press       /input/trackpad/click
+         *
+         * A button             /input/a
+         * B button             /input/b
+         * X button             /input/x
+         * Y button             /input/y
+         *
+         * Joystick X axis      /input/trackpad/x
+         * Joystick Y axis      /input/trackpad/y
+         *
+         * ZR button            /input/trigger/value
+         *
+         * SR button            Reset IMU orientation
+         * R button             Unbound
+         */
+        GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_START), 0);   // Application Menu
+        GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TRIGGER_HAPPY3), 0); // Grip
+        GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_MODE), 0);         // System
+        GetDriver()->GetInput()->UpdateBooleanComponent(right_trackpad_button_click_component_, getJoyButton(BTN_THUMBR), 0);     // Trackpad
+
+        GetDriver()->GetInput()->UpdateBooleanComponent(a_button_click_component_, getJoyButton(BTN_B), 0); // Annoyingly hid-nintendo driver
+        GetDriver()->GetInput()->UpdateBooleanComponent(b_button_click_component_, getJoyButton(BTN_A), 0); // has A and B buttons swapped
+        GetDriver()->GetInput()->UpdateBooleanComponent(x_button_click_component_, getJoyButton(BTN_X), 0);
+        GetDriver()->GetInput()->UpdateBooleanComponent(y_button_click_component_, getJoyButton(BTN_Y), 0);
 
         float x = static_cast<float>(getJoyAxis(ABS_RX))/32768.0f;
         float y = static_cast<float>(getJoyAxis(ABS_RY))/-32768.0f;
@@ -404,18 +459,18 @@ void JoyconVrDriver::ControllerDevice::Update()
         float trackpad_x = trackpad_norm * cos(arct);
         float trackpad_y = trackpad_norm * sin(arct);
 
-        GetDriver()->GetInput()->UpdateBooleanComponent(trackpad_touch_component_, trackpad_touch, 0); //Trackpad
-        GetDriver()->GetInput()->UpdateScalarComponent(trackpad_x_component_, trackpad_x, 0); //Trackpad x
-        GetDriver()->GetInput()->UpdateScalarComponent(trackpad_y_component_, trackpad_y, 0); //Trackpad y
+        GetDriver()->GetInput()->UpdateBooleanComponent(right_trackpad_touch_component_, trackpad_touch, 0); // Trackpad touch
+        GetDriver()->GetInput()->UpdateScalarComponent(right_trackpad_x_component_, trackpad_x, 0);          // Trackpad x
+        GetDriver()->GetInput()->UpdateScalarComponent(right_trackpad_y_component_, trackpad_y, 0);          // Trackpad y
 
 
-        if (getJoyButton(BTN_TR)) { //Trigger
+        if (getJoyButton(BTN_TR2)) { // Trigger
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 1.0, 0);
         } else {
             GetDriver()->GetInput()->UpdateScalarComponent(trigger_value_component_, 0.0, 0);
         }
 
-        if (getJoyButton(BTN_WEST)) { // IMU reset
+        if (getJoyButton(BTN_TRIGGER_HAPPY4)) { // IMU reset
             resetRightIMU();
         }
 
@@ -514,12 +569,21 @@ vr::EVRInitError JoyconVrDriver::ControllerDevice::Activate(uint32_t unObjectId)
     // Get the properties handle
     auto props = GetDriver()->GetProperties()->TrackedDeviceToPropertyContainer(this->device_index_);
 
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ControllerType_String, "vive_controller");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{htc}/input/vive_controller_profile.json");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ControllerType_String, "joyconvr_controller");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{joyconvr}/input/joyconvr_controller_profile.json");
 
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "ViveMV");
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ManufacturerName_String, "HTC");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "JoyconVR");
+    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ManufacturerName_String, "JoyconVR");
+#if 0
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "vr_controller_vive_1_5");
+#else
+    if (this->handedness_ == Handedness::LEFT) {
+        GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "{joyconvr}joyconvr_controller_left_1_0");
+    }
+    else {
+        GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "{joyconvr}joyconvr_controller_right_1_0");
+    }
+#endif
 
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_TrackingSystemName_String, "VR Controller");
     GetDriver()->GetProperties()->SetInt32Property(props, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_Controller);
@@ -542,18 +606,29 @@ vr::EVRInitError JoyconVrDriver::ControllerDevice::Activate(uint32_t unObjectId)
 
     // this file tells the UI what to show the user for binding this controller as well as what default bindings should
     // be for legacy or other apps
-    GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{htc}/input/vive_controller_profile.json");
+    // GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{htc}/input/vive_controller_profile.json");
 
     //  Buttons handles
     GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/application_menu/click", &application_button_click_component_);
     GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/grip/click", &grip_button_click_component_);
     GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/system/click", &system_button_click_component_);
-    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/trackpad/click", &trackpad_button_click_component_);
-    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/trackpad/touch", &trackpad_touch_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/a/click", &a_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/b/click", &b_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/x/click", &x_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/left/click", &left_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/down/click", &down_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/up/click", &up_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/right/click", &right_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/lefttrackpad/click", &left_trackpad_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/lefttrackpad/touch", &left_trackpad_touch_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/righttrackpad/click", &right_trackpad_button_click_component_);
+    GetDriver()->GetInput()->CreateBooleanComponent(props, "/input/righttrackpad/touch", &right_trackpad_touch_component_);
 
     // Analog handles
-    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/trackpad/x", &trackpad_x_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
-    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/trackpad/y", &trackpad_y_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
+    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/lefttrackpad/x", &left_trackpad_x_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
+    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/lefttrackpad/y", &left_trackpad_y_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
+    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/righttrackpad/x", &right_trackpad_x_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
+    GetDriver()->GetInput()->CreateScalarComponent(props, "/input/righttrackpad/y", &right_trackpad_y_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
     GetDriver()->GetInput()->CreateScalarComponent(props, "/input/trigger/value", &trigger_value_component_, vr::EVRScalarType::VRScalarType_Absolute, vr::EVRScalarUnits::VRScalarUnits_NormalizedOneSided);
 
     GetDriver()->GetProperties()->SetInt32Property(props, vr::Prop_Axis0Type_Int32, vr::k_eControllerAxis_TrackPad);

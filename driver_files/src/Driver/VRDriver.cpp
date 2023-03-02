@@ -23,13 +23,13 @@ vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverCon
 
     {
         std::shared_ptr<IVRDevice> addtracker;
-        addtracker = std::make_shared<ControllerDevice>("JoyconLeft", ControllerDevice::Handedness::LEFT);
+        addtracker = std::make_shared<ControllerDevice>("JOYVR-000001", ControllerDevice::Handedness::LEFT);
         this->AddDevice(addtracker);
     }
 
     {
         std::shared_ptr<IVRDevice> addtracker;
-        addtracker = std::make_shared<ControllerDevice>("JoyconRight", ControllerDevice::Handedness::RIGHT);
+        addtracker = std::make_shared<ControllerDevice>("JOYVR-000002", ControllerDevice::Handedness::RIGHT);
         this->AddDevice(addtracker);
     }
 
