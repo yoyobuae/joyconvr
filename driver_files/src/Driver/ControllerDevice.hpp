@@ -44,7 +44,10 @@ namespace JoyconVrDriver {
         float vibrate_anim_state_ = 0.f;
         int c = 0;
 
+        bool auto_click_left_trackpad_request = false;
         bool auto_click_left_trackpad = false;
+        bool auto_click_right_trackpad_request = false;
+        bool auto_click_right_trackpad = false;
 
         vr::VRInputComponentHandle_t application_button_click_component_ = 0;
         vr::VRInputComponentHandle_t grip_button_click_component_ = 0;

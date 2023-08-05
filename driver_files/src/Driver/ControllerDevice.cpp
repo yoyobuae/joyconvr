@@ -322,7 +322,7 @@ void JoyconVrDriver::ControllerDevice::Update()
         float arct = atan2(y, x);
 
         // Deadzone and touch calcs
-        bool trackpad_touch = norm > 0.125f;
+        bool trackpad_touch = norm > 0.1875f;
         float trackpad_norm = norm > 0.25f ? (norm - 0.25f) / 0.75f : 0.0f;
         float trackpad_x = trackpad_norm * cos(arct);
         float trackpad_y = trackpad_norm * sin(arct);
@@ -348,9 +348,13 @@ void JoyconVrDriver::ControllerDevice::Update()
          */
         if (getJoyButton(BTN_TL)) {
             if (getJoyButton(BTN_THUMBL)) {
-                auto_click_left_trackpad = !auto_click_left_trackpad;
+                auto_click_left_trackpad_request = true;
             }
         } else {
+            if (auto_click_left_trackpad_request) {
+                auto_click_left_trackpad_request = false;
+                auto_click_left_trackpad = !auto_click_left_trackpad;
+            }
             GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_SELECT), 0);  // Application Menu
             GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TRIGGER_HAPPY2), 0); // Grip
             GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_Z), 0);            // System
@@ -419,6 +423,17 @@ void JoyconVrDriver::ControllerDevice::Update()
             Log("Reading from right IMU");
         q_valid = getRightIMU(q);
 
+        float x = static_cast<float>(getJoyAxis(ABS_RX))/32768.0f;
+        float y = static_cast<float>(getJoyAxis(ABS_RY))/-32768.0f;
+        float norm = hypot(x, y);
+        float arct = atan2(y, x);
+
+        // Deadzone and touch calcs
+        bool trackpad_touch = norm > 0.1875f;
+        float trackpad_norm = norm > 0.25f ? (norm - 0.25f) / 0.75f : 0.0f;
+        float trackpad_x = trackpad_norm * cos(arct);
+        float trackpad_y = trackpad_norm * sin(arct);
+
         /*
          * Plus button          /input/application_menu
          * SL button            /input/grip
@@ -438,26 +453,26 @@ void JoyconVrDriver::ControllerDevice::Update()
          * SR button            Reset IMU orientation
          * R button             Unbound
          */
-        GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_START), 0);   // Application Menu
-        GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TRIGGER_HAPPY3), 0); // Grip
-        GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_MODE), 0);         // System
-        GetDriver()->GetInput()->UpdateBooleanComponent(right_trackpad_button_click_component_, getJoyButton(BTN_THUMBR), 0);     // Trackpad
+        if (getJoyButton(BTN_TR)) {
+            if (getJoyButton(BTN_THUMBR)) {
+                auto_click_right_trackpad_request = true;
+            }
+        } else {
+            if (auto_click_right_trackpad_request) {
+                auto_click_right_trackpad_request = false;
+                auto_click_right_trackpad = !auto_click_right_trackpad;
+            }
+            GetDriver()->GetInput()->UpdateBooleanComponent(application_button_click_component_, getJoyButton(BTN_START), 0);   // Application Menu
+            GetDriver()->GetInput()->UpdateBooleanComponent(grip_button_click_component_, getJoyButton(BTN_TRIGGER_HAPPY3), 0); // Grip
+            GetDriver()->GetInput()->UpdateBooleanComponent(system_button_click_component_, getJoyButton(BTN_MODE), 0);         // System
+            GetDriver()->GetInput()->UpdateBooleanComponent(right_trackpad_button_click_component_,
+                                                            getJoyButton(BTN_THUMBR) || (trackpad_touch && auto_click_right_trackpad), 0);     // Trackpad
 
-        GetDriver()->GetInput()->UpdateBooleanComponent(a_button_click_component_, getJoyButton(BTN_B), 0); // Annoyingly hid-nintendo driver
-        GetDriver()->GetInput()->UpdateBooleanComponent(b_button_click_component_, getJoyButton(BTN_A), 0); // has A and B buttons swapped
-        GetDriver()->GetInput()->UpdateBooleanComponent(x_button_click_component_, getJoyButton(BTN_X), 0);
-        GetDriver()->GetInput()->UpdateBooleanComponent(y_button_click_component_, getJoyButton(BTN_Y), 0);
-
-        float x = static_cast<float>(getJoyAxis(ABS_RX))/32768.0f;
-        float y = static_cast<float>(getJoyAxis(ABS_RY))/-32768.0f;
-        float norm = hypot(x, y);
-        float arct = atan2(y, x);
-
-        // Deadzone and touch calcs
-        bool trackpad_touch = norm > 0.125f;
-        float trackpad_norm = norm > 0.25f ? (norm - 0.25f) / 0.75f : 0.0f;
-        float trackpad_x = trackpad_norm * cos(arct);
-        float trackpad_y = trackpad_norm * sin(arct);
+            GetDriver()->GetInput()->UpdateBooleanComponent(a_button_click_component_, getJoyButton(BTN_B), 0); // Annoyingly hid-nintendo driver
+            GetDriver()->GetInput()->UpdateBooleanComponent(b_button_click_component_, getJoyButton(BTN_A), 0); // has A and B buttons swapped
+            GetDriver()->GetInput()->UpdateBooleanComponent(x_button_click_component_, getJoyButton(BTN_X), 0);
+            GetDriver()->GetInput()->UpdateBooleanComponent(y_button_click_component_, getJoyButton(BTN_Y), 0);
+        }
 
         GetDriver()->GetInput()->UpdateBooleanComponent(right_trackpad_touch_component_, trackpad_touch, 0); // Trackpad touch
         GetDriver()->GetInput()->UpdateScalarComponent(right_trackpad_x_component_, trackpad_x, 0);          // Trackpad x
