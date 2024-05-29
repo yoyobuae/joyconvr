@@ -246,7 +246,7 @@ void JoyconVrDriver::ControllerDevice::Update()
             resetLeftIMU();
         }
 
-#if 0
+#if 1
         vr::VRBoneTransform_t hand_pose[NUM_BONES];
 
         for (int i = 0; i < sizeof(commonBones)/sizeof(commonBones[0]); i++)
@@ -353,7 +353,7 @@ void JoyconVrDriver::ControllerDevice::Update()
             resetRightIMU();
         }
 
-#if 0
+#if 1
         vr::VRBoneTransform_t hand_pose[NUM_BONES];
 
         for (int i = 0; i < sizeof(commonBones)/sizeof(commonBones[0]); i++)
@@ -515,7 +515,7 @@ vr::EVRInitError JoyconVrDriver::ControllerDevice::Activate(uint32_t unObjectId)
     // create our haptic component
     GetDriver()->GetInput()->CreateHapticComponent(props, "/output/haptic", &haptic_component_);
 
-#if 0
+#if 1
     // create skeleton component
     if (this->handedness_ == Handedness::LEFT) {
         GetDriver()->GetInput()->CreateSkeletonComponent(props, "/input/skeleton/left", "/skeleton/hand/left", "/user/hand/left/pose/tip", vr::VRSkeletalTracking_Estimated, nullptr, 0, &skeleton_component_);
