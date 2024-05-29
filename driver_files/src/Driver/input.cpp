@@ -921,6 +921,9 @@ bool getLeftIMU(double q[4])
         auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetLeftIMUTime);
         if (elapsed.count() > 0) {
             char *device = find_device_with_name("Nintendo Switch Left Joy-Con IMU");
+            if (!device) {
+                device = find_device_with_name("Joy-Con (L) (IMU)");
+            }
             if (device) {
                 left_imu.open(device);
                 char buffer[256];
@@ -958,6 +961,9 @@ bool getRightIMU(double q[4])
         auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetRightIMUTime);
         if (elapsed.count() > 0) {
             char *device = find_device_with_name("Nintendo Switch Right Joy-Con IMU");
+            if (!device) {
+                device = find_device_with_name("Joy-Con (R) (IMU)");
+            }
             if (device) {
                 right_imu.open(device);
                 char buffer[256];
