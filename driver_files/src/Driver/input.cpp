@@ -42,6 +42,7 @@
 #include <Eigen/Geometry>
 
 #include "input.h"
+#include "vqf.hpp"
 
 
 Mouse::Mouse() : fd(-1) { }
@@ -548,10 +549,11 @@ private:
     double gyro_activity_level = 0;
     double g_bias_x = 0.0, g_bias_y = 0.0, g_bias_z = 0.0;
     bool valid = false;
+    VQF vqf;
 };
 
 IMU::IMU()
-    : fd(-1)
+    : fd(-1), vqf(VQFParams(), 0.005)
 {
     memset(axes, 0, sizeof(axes));
     memset(gyro_history, 0, sizeof(gyro_history));
@@ -641,10 +643,12 @@ bool IMU::read(double q[4])
     } while (true);
 
     if (ret) {
-        q[0] = SEq_1;
-        q[1] = SEq_2;
-        q[2] = SEq_3;
-        q[3] = SEq_4;
+        vqf_real_t quat[4] = {0, 0, 0, 0};
+        vqf.getQuat6D(quat);
+        q[0] = quat[0];
+        q[1] = quat[1];
+        q[2] = quat[2];
+        q[3] = quat[3];
     }
     return ret;
 }
@@ -672,9 +676,13 @@ bool IMU::update()
     /* Calculate timestamp delta since last update and convert to seconds */
     double deltat = (double)(timestamp - prev_timestamp)/1000000.0f;
 
-    drift_compensation(w_x, w_y, w_z);
+    vqf_real_t gyr[3] = {w_x, w_y, w_z}; // in rad/s
+    vqf_real_t acc[3] = {9.8067*a_x, 9.8067*a_y, 9.8067*a_z}; // in m/s²
+    vqf.update(gyr, acc);
 
-    filterUpdate(w_x, w_y, w_z, a_x, a_y, a_z, deltat, SEq_1, SEq_2, SEq_3, SEq_4);
+    //drift_compensation(w_x, w_y, w_z);
+
+    //filterUpdate(w_x, w_y, w_z, a_x, a_y, a_z, deltat, SEq_1, SEq_2, SEq_3, SEq_4);
 
     return true;
 }
