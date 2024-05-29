@@ -916,9 +916,9 @@ static std::chrono::time_point<std::chrono::steady_clock> lastGetLeftIMUTime;
 bool getLeftIMU(double q[4])
 {
     bool ret = false;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetLeftIMUTime);
     if (!left_imu.isOpen()) {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetLeftIMUTime);
         if (elapsed.count() > 0) {
             char *device = find_device_with_name("Nintendo Switch Left Joy-Con IMU");
             if (!device) {
@@ -934,10 +934,15 @@ bool getLeftIMU(double q[4])
             }
             lastGetLeftIMUTime = now;
         }
-    }
-
-    if (left_imu.isOpen()) {
+    } else {
         ret = left_imu.read(q);
+        if (ret) {
+            lastGetLeftIMUTime = now;
+        }
+        if (elapsed.count() > 0) {
+            left_imu.close();
+            lastGetLeftIMUTime = now;
+        }
     }
 
     return ret;
@@ -956,9 +961,9 @@ static std::chrono::time_point<std::chrono::steady_clock> lastGetRightIMUTime;
 bool getRightIMU(double q[4])
 {
     bool ret = false;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetRightIMUTime);
     if (!right_imu.isOpen()) {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<5, 1>>>(now - lastGetRightIMUTime);
         if (elapsed.count() > 0) {
             char *device = find_device_with_name("Nintendo Switch Right Joy-Con IMU");
             if (!device) {
@@ -974,13 +979,13 @@ bool getRightIMU(double q[4])
             }
             lastGetRightIMUTime = now;
         }
-    }
-
-    if (right_imu.isOpen()) {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::duration<int, std::ratio<1, 60>>>(now - lastGetRightIMUTime);
+    } else {
+        ret = right_imu.read(q);
+        if (ret) {
+            lastGetRightIMUTime = now;
+        }
         if (elapsed.count() > 0) {
-            ret = right_imu.read(q);
+            right_imu.close();
             lastGetRightIMUTime = now;
         }
     }
