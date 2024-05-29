@@ -42,5 +42,6 @@ namespace JoyconVrDriver {
         std::vector<vr::VREvent_t> openvr_events_;
         std::chrono::milliseconds frame_timing_ = std::chrono::milliseconds(16);
         std::string settings_key_ = "driver_joyconvr";
+        void RpcThread();
     };
 };

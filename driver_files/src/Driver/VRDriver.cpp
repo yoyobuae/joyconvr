@@ -1,7 +1,17 @@
+#include "apriltagrpc.capnp.hpp"
+#include <kj/debug.h>
+#include <capnp/ez-rpc.h>
+#include <capnp/message.h>
+#include <cmath>
+#include <thread>
+
 #include "VRDriver.hpp"
 #include <Driver/ControllerDevice.hpp>
 
 #define ENABLE_HMD
+
+extern double leftPose[7];
+extern double rightPose[7];
 
 vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverContext)
 {
@@ -33,6 +43,9 @@ vr::EVRInitError JoyconVrDriver::VRDriver::Init(vr::IVRDriverContext* pDriverCon
         this->AddDevice(addtracker);
     }
 
+    std::thread rpcThread(&JoyconVrDriver::VRDriver::RpcThread, this);
+    rpcThread.detach();
+
     Log("JoyconVR Driver Loaded Successfully");
 
 	return vr::VRInitError_None;
@@ -46,6 +59,52 @@ void JoyconVrDriver::VRDriver::Cleanup()
 #endif
 }
 
+
+
+void JoyconVrDriver::VRDriver::RpcThread()
+{
+    auto deadline = std::chrono::steady_clock::now();
+    deadline += std::chrono::seconds((uint64_t) (5.0));
+    std::this_thread::sleep_until(deadline);
+    deadline = std::chrono::steady_clock::now();
+
+    capnp::EzRpcClient client("192.168.9.130:54321");
+    AprilTagRpc::Client apriltagrpc = client.getMain<AprilTagRpc>();
+    auto& waitScope = client.getWaitScope();
+
+    Log("RpcThread: thread staring...");
+    while (true) {
+
+        auto leftRequest = apriltagrpc.getTrackerPoseRequest();
+        auto rightRequest = apriltagrpc.getTrackerPoseRequest();
+        leftRequest.setIndex(8);
+        rightRequest.setIndex(9);
+        leftRequest.setTimeOffset(0.0);
+        rightRequest.setTimeOffset(0.0);
+        auto leftPromise = leftRequest.send();
+        auto rightPromise = rightRequest.send();
+        deadline += std::chrono::nanoseconds((uint64_t) (1e9 / 60.f));
+        std::this_thread::sleep_until(deadline);
+        auto leftResponse = leftPromise.wait(waitScope);
+        auto rightResponse = rightPromise.wait(waitScope);
+
+        leftPose[0] = leftResponse.getPose().getX();
+        leftPose[1] = leftResponse.getPose().getY();
+        leftPose[2] = leftResponse.getPose().getZ();
+        leftPose[3] = leftResponse.getPose().getQw();
+        leftPose[4] = leftResponse.getPose().getQx();
+        leftPose[5] = leftResponse.getPose().getQy();
+        leftPose[6] = leftResponse.getPose().getQz();
+
+        rightPose[0] = rightResponse.getPose().getX();
+        rightPose[1] = rightResponse.getPose().getY();
+        rightPose[2] = rightResponse.getPose().getZ();
+        rightPose[3] = rightResponse.getPose().getQw();
+        rightPose[4] = rightResponse.getPose().getQx();
+        rightPose[5] = rightResponse.getPose().getQy();
+        rightPose[6] = rightResponse.getPose().getQz();
+    }
+}
 
 void JoyconVrDriver::VRDriver::RunFrame()
 {

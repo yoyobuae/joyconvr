@@ -22,6 +22,7 @@ endif()
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 find_library(OPENVR_LIB openvr_api HINTS "${CMAKE_CURRENT_SOURCE_DIR}/libraries/openvr/lib/" NO_DEFAULT_PATH )
+find_package(CapnProto CONFIG REQUIRED)
 
 include (FindPkgConfig)
 pkg_check_modules(EIGEN3 REQUIRED IMPORTED_TARGET eigen3)
@@ -37,9 +38,10 @@ target_include_directories("${EXAMPLE_PROJECT}" PRIVATE "${EIGEN3_INCLUDE_DIRS}"
 target_include_directories("${EXAMPLE_PROJECT}" PUBLIC "${OPENVR_INCLUDE_DIR}")
 target_include_directories("${EXAMPLE_PROJECT}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src/")
 target_link_libraries("${EXAMPLE_PROJECT}" PUBLIC "${OPENVR_LIB}")
+target_link_libraries("${EXAMPLE_PROJECT}" PRIVATE CapnProto::capnp-rpc)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src" PREFIX "Header Files" FILES ${HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/driver_files/src" PREFIX "Source Files" FILES ${SOURCES})
-set_property(TARGET "${EXAMPLE_PROJECT}" PROPERTY CXX_STANDARD 17)
+set_property(TARGET "${EXAMPLE_PROJECT}" PROPERTY CXX_STANDARD 20)
 
 # Copy driver assets to output folder
 add_custom_command(

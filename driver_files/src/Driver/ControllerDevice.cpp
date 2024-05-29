@@ -3,9 +3,14 @@
 #include <algorithm>
 
 #include "ControllerDevice.hpp"
+#include "Quaternion.hpp"
 
 #include "input.h"
 
+double leftPose[7] = { 0.0 };
+double rightPose[7] = { 0.0 };
+Quaternion leftState = { 1.0, 0.0, 0.0, 0.0 };
+Quaternion rightState = { 1.0, 0.0, 0.0, 0.0 };
 
 const double pi = std::acos(-1);
 
@@ -399,10 +404,35 @@ void JoyconVrDriver::ControllerDevice::Update()
     }
 
     if (q_valid) {
-        pose.qRotation.w = q[0];
-        pose.qRotation.x = -q[2];
-        pose.qRotation.y = q[3];
-        pose.qRotation.z = -q[1];
+        Quaternion IMU = Quaternion(q[0], -q[2], q[3], -q[1]);
+        Quaternion Optical(1.0, 0.0, 0.0, 0.0);
+        Quaternion *state = nullptr;
+        if (this->handedness_ == Handedness::LEFT) {
+            pose.vecPosition[0] = leftPose[0];
+            pose.vecPosition[1] = leftPose[1];
+            pose.vecPosition[2] = leftPose[2];
+            Optical = Quaternion(leftPose[3],
+                                 leftPose[4],
+                                 leftPose[5],
+                                 leftPose[6]);
+            state = &leftState;
+        }
+        else {
+            pose.vecPosition[0] = rightPose[0];
+            pose.vecPosition[1] = rightPose[1];
+            pose.vecPosition[2] = rightPose[2];
+            Optical = Quaternion(rightPose[3],
+                                 rightPose[4],
+                                 rightPose[5],
+                                 rightPose[6]);
+            state = &rightState;
+        }
+        Quaternion compensatedIMU = drift_compensation(IMU, Optical, state);
+
+        pose.qRotation.w = compensatedIMU.w;
+        pose.qRotation.x = compensatedIMU.x;
+        pose.qRotation.y = compensatedIMU.y;
+        pose.qRotation.z = compensatedIMU.z;
 
         pose.poseTimeOffset = 0;
 
