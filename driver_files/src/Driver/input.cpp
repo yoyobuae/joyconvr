@@ -621,7 +621,7 @@ bool IMU::read(double q[4])
         }
 
         if (bytes_read == 0) {
-            break;
+            
         }
 
         if (bytes_read < static_cast<decltype(bytes_read)>(sizeof(ev))) {
