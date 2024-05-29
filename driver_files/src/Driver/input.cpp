@@ -38,6 +38,8 @@
 #include <linux/input-event-codes.h>
 
 #include <chrono>
+#include <string>
+#include <map>
 
 #include <Eigen/Geometry>
 
@@ -532,6 +534,7 @@ public:
 
     bool read(double q[4]);
     void reset();
+    void setSensitivity(double value) { sensitivity = value; }
 
 private:
     bool update();
@@ -550,10 +553,11 @@ private:
     double g_bias_x = 0.0, g_bias_y = 0.0, g_bias_z = 0.0;
     bool valid = false;
     VQF vqf;
+    double sensitivity;
 };
 
 IMU::IMU()
-    : fd(-1), vqf(VQFParams(), 0.005)
+    : fd(-1), vqf(VQFParams(), 0.005), sensitivity(1.0)
 {
     memset(axes, 0, sizeof(axes));
     memset(gyro_history, 0, sizeof(gyro_history));
@@ -676,7 +680,7 @@ bool IMU::update()
     /* Calculate timestamp delta since last update and convert to seconds */
     double deltat = (double)(timestamp - prev_timestamp)/1000000.0f;
 
-    vqf_real_t gyr[3] = {w_x, w_y, w_z}; // in rad/s
+    vqf_real_t gyr[3] = {w_x*sensitivity, w_y*sensitivity, w_z*sensitivity}; // in rad/s
     vqf_real_t acc[3] = {9.8067*a_x, 9.8067*a_y, 9.8067*a_z}; // in m/s²
     vqf.update(gyr, acc);
 
@@ -765,6 +769,30 @@ const char *get_device_name(const char *path, char *buffer, size_t size)
         errno = 0;
         return "";
     }
+
+    return buffer;
+}
+
+const char *get_device_uniq(const char *path, char *buffer, size_t size)
+{
+    int fd = open(path, O_RDONLY);
+
+    if (fd < 0)
+    {
+        errno = 0;
+        return "";
+    }
+
+    //Fetch Device unique identifier
+    int res = ioctl(fd, EVIOCGUNIQ (size), buffer);
+    close(fd);
+
+    if (res < 0)
+    {
+        errno = 0;
+        return "";
+    }
+
 
     return buffer;
 }
@@ -875,6 +903,13 @@ int getJoyAxis(int axis)
     return 0;
 }
 
+static std::map<std::string, double> IMU_sensitivity_table = {
+    {"98:B6:E9:74:22:DB", 1.037},
+    {"98:B6:E9:2F:45:76", 0.873},
+    {"04:03:D6:F2:2E:5D", 0.871},
+    {"04:03:D6:F3:77:69", 1.038},
+};
+
 IMU left_imu;
 static std::chrono::time_point<std::chrono::steady_clock> lastGetLeftIMUTime;
 
@@ -888,6 +923,10 @@ bool getLeftIMU(double q[4])
             char *device = find_device_with_name("Nintendo Switch Left Joy-Con IMU");
             if (device) {
                 left_imu.open(device);
+                char buffer[256];
+                const char *uniq = get_device_uniq(device, buffer, sizeof(buffer));
+                if ((uniq[0] != '\0') && IMU_sensitivity_table.contains(std::string(uniq)))
+                    left_imu.setSensitivity(IMU_sensitivity_table[std::string(uniq)]);
                 free(device);
             }
             lastGetLeftIMUTime = now;
@@ -921,6 +960,10 @@ bool getRightIMU(double q[4])
             char *device = find_device_with_name("Nintendo Switch Right Joy-Con IMU");
             if (device) {
                 right_imu.open(device);
+                char buffer[256];
+                const char *uniq = get_device_uniq(device, buffer, sizeof(buffer));
+                if ((uniq[0] != '\0') && IMU_sensitivity_table.contains(std::string(uniq)))
+                    right_imu.setSensitivity(IMU_sensitivity_table[std::string(uniq)]);
                 free(device);
             }
             lastGetRightIMUTime = now;
